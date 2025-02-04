@@ -4,4 +4,4 @@
 - explore resolution-invariant solutions
 
 ---
-To use the scripts in this repo, please use a venv with AxonDeepSeg installed.
+To use the scripts in this repo, please use a venv with AxonDeepSeg installed. The only dependency to add is `monai`.

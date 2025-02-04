@@ -12,6 +12,14 @@ import numpy as np
 from AxonDeepSeg.ads_utils import imread, imwrite
 from skimage.transform import resize
 
+def get_sizes_from_directory(dir):
+    '''we assume that dir contains the resized images (_expansion/imgs/)'''
+    sizes = []
+    for fname in dir.glob('*.png'):
+        if 'im_' in fname.stem:
+            sizes.append(tuple(map(int, fname.stem.split('_')[1:])))
+    return sorted(sizes)
+
 def get_sizes(image, lower, upper, N):
     # the first half of the sizes are decreasing, the second half increasing
     sizes = []
