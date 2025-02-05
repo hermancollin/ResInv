@@ -17,17 +17,93 @@ import torch
 from monai.metrics import DiceMetric
 from AxonDeepSeg.ads_utils import imread
 from skimage.transform import resize
+import matplotlib.pyplot as plt
+import matplotlib
+import seaborn as sns
+plt.style.use('dark_background')
 
 
-#=============#
-# apply model #
-#=============#
+    #===============#
+    # visualization #
+    #===============#
+def plot_and_write_results(results_dir):
+    assert (results_dir / 'evaluation.csv').exists(), f'No evaluation.csv found in {results_dir}'
+    df = pd.read_csv(results_dir / 'evaluation.csv')
+    fig, axs = plt.subplots(2, 1, figsize=(8, 14))
+    sns.set()
+    plt.style.use('dark_background')
+    
+    for ax in axs:
+        ax.set_xscale('log')
+        ax.set_xticks([0.25, 0.5, 2, 4])
+        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        ax.spines['left'].set_position('center')
+        ax.yaxis.tick_left()
+        ax.set_yticks([0.6, 0.7, 0.8, 0.9, 1])
+        ax.set_ylim(0.55, 1)
+        ax.tick_params(axis='y', colors='white')
+        ax.grid(False)
+
+    # plot in SHIFTED referential
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Axon Resized",
+        ax=axs[0], color='limegreen', label='axon', marker='.'
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Myelin Resized",
+        ax=axs[0], color='springgreen', label="myelin", marker='.'
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Axon Interpolation",
+        ax=axs[0], color='limegreen', label="axon gt interpolation", 
+        linestyle='--', alpha=0.5
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Myelin Interpolation",
+        ax=axs[0], color='springgreen', label="myelin gt interpolation", 
+        linestyle='--', alpha=0.5
+    )
+    sns.despine()
+    axs[0].legend()
+    axs[0].set_ylabel("")
+    axs[0].set_title("Dice - Shifted Referential")
+
+    # plot in NATIVE referential
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Axon Native",
+        ax=axs[1], color='fuchsia', label='axon', marker='.'
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Myelin Native",
+        ax=axs[1], color='mediumvioletred', label="myelin", marker='.'
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Axon Interpolation",
+        ax=axs[1], color='fuchsia', label="axon gt interpolation", 
+        linestyle='--', alpha=0.5
+    )
+    _ = sns.lineplot(
+        data=df, x="Resize Factor", y="Dice Myelin Interpolation",
+        ax=axs[1], color='mediumvioletred', label="myelin gt interpolation", 
+        linestyle='--', alpha=0.5
+    )
+    sns.despine()
+    axs[1].legend()
+    axs[1].set_ylabel("")
+    axs[1].set_title("Dice - Native Referential")
+
+    plt.style.use('dark_background')
+    plt.savefig(results_dir / 'evaluation.png', dpi=200)
+
+    #=============#
+    # apply model #
+    #=============#
 def apply_model(model, image):
     ...
 
-#============#
-# evaluation #
-#============#
+    #============#
+    # evaluation #
+    #============#
 def convert_numpy_to_tensor(img):
     img = np.where(img > 0, 1, 0)
     tensor = torch.from_numpy(img).float().unsqueeze(0)
@@ -109,7 +185,7 @@ def evaluate(preds_path, img_path):
     results.to_csv(preds_path / 'evaluation.csv', index=False)
 
 
-def main(impath, model):
+def main(impath, model, plot_only):
     if model:
         # apply the model
         apply_model(model, impath)
@@ -121,13 +197,17 @@ def main(impath, model):
     models = [d.name for d in preds_dir.glob('*') if d.is_dir()]
     for model in models:
         model_preds_path = preds_dir / model
-        print(f'Evaluation for model {model}')
-        evaluation = evaluate(model_preds_path, impath)
+        if not plot_only:
+            print(f'Evaluation for model {model}')
+            evaluation = evaluate(model_preds_path, impath)
+        print(f'Plotting results for model {model}.')
+        plot_and_write_results(model_preds_path)
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--impath", required=True, help="path to original image")
     ap.add_argument("-m", "--model", default=None, required=False, help="path to model")
+    ap.add_argument("-p", "--plot", action='store_true', help='only plot existing results')
 
     args = ap.parse_args()
-    main(args.impath, args.model)
+    main(args.impath, args.model, args.plot)
