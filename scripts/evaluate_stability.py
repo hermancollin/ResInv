@@ -36,9 +36,9 @@ def plot_and_write_results(results_dir):
     
     for ax in axs:
         ax.set_xscale('log')
-        ax.set_xticks([0.25, 0.5, 2, 4])
+        ax.set_xticks([0.25, 0.5, 1.0, 2, 4])
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        ax.spines['left'].set_position('center')
+        ax.spines['left'].set_position(('data', 1))
         ax.yaxis.tick_left()
         ax.set_yticks([0.6, 0.7, 0.8, 0.9, 1])
         ax.set_ylim(0.55, 1)
