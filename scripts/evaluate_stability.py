@@ -103,7 +103,9 @@ def plot_and_write_results(results_dir):
 def apply_model(model, impath):
     # verify if image is already expanded
     expansion_dir = Path(impath).parent / f'{Path(impath).stem}_expansion'
-    if not expansion_dir.exists():
+    if expansion_dir.exists():
+        print('Image already expanded - skipping expansion.')
+    else:
         expand_image(impath=impath, num_samples=20)
     
     im_paths = list((expansion_dir / 'imgs').glob('*.png'))
@@ -208,9 +210,9 @@ def evaluate(preds_path, img_path):
     results.to_csv(preds_path / 'evaluation.csv', index=False)
 
 
-def main(impath, model, plot_only):
-    if model:
-        apply_model(model, impath)
+def main(impath, modelpath, plot_only):
+    if modelpath:
+        apply_model(modelpath, impath)
 
     # predictions are in _expansion/preds/
     preds_dir = Path(impath).parent / f'{Path(impath).stem}_expansion/preds'
@@ -218,6 +220,8 @@ def main(impath, model, plot_only):
 
     models = [d.name for d in preds_dir.glob('*') if d.is_dir()]
     for model in models:
+        if modelpath and model != Path(modelpath).name:
+            continue
         model_preds_path = preds_dir / model
         if not plot_only:
             print(f'Evaluation for model {model}')
