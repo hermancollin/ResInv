@@ -4,9 +4,9 @@
 - explore resolution-invariant solutions
 
 `evaluate_stability.py` applies a model on a single *IMAGE-GT* pair in a wide 
-range of resolutions (the image is resized, either bigger or smaller); also 
-generates these plots:
-![img](model_eval_example.png)
+range of resolutions (the image is resized, either bigger or smaller).
+![img](model_comparison_example.png)
+The image used for this example was *sub-rat1_sample-data1_SEM.png* from the default SEM dataset.
 
 
 ---
