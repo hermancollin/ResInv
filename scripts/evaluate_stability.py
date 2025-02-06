@@ -8,6 +8,7 @@ Author: Armand Collin
 '''
 
 from preprocess_image import get_sizes_from_directory, expand_image
+from plot_results import plot_and_write_results, plot_model_comparison
 
 from pathlib import Path
 import argparse
@@ -18,83 +19,12 @@ from monai.metrics import DiceMetric
 from AxonDeepSeg.ads_utils import imread
 from AxonDeepSeg.segment import segment_images
 from skimage.transform import resize
-import matplotlib.pyplot as plt
-import matplotlib
-import seaborn as sns
-plt.style.use('dark_background')
 
 
     #===============#
     # visualization #
     #===============#
-def plot_and_write_results(results_dir):
-    assert (results_dir / 'evaluation.csv').exists(), f'No evaluation.csv found in {results_dir}'
-    df = pd.read_csv(results_dir / 'evaluation.csv')
-    fig, axs = plt.subplots(2, 1, figsize=(8, 14))
-    sns.set()
-    plt.style.use('dark_background')
-    
-    for ax in axs:
-        ax.set_xscale('log')
-        ax.set_xticks([0.25, 0.5, 1.0, 2, 4])
-        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        ax.spines['left'].set_position(('data', 1))
-        ax.yaxis.tick_left()
-        ax.set_yticks([0.6, 0.7, 0.8, 0.9, 1])
-        ax.set_ylim(0.55, 1)
-        ax.tick_params(axis='y', colors='white')
-        ax.grid(False)
 
-    # plot in SHIFTED referential
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Axon Resized",
-        ax=axs[0], color='limegreen', label='axon', marker='.'
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Myelin Resized",
-        ax=axs[0], color='springgreen', label="myelin", marker='.'
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Axon Interpolation",
-        ax=axs[0], color='limegreen', label="axon gt interpolation", 
-        linestyle='--', alpha=0.5
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Myelin Interpolation",
-        ax=axs[0], color='springgreen', label="myelin gt interpolation", 
-        linestyle='--', alpha=0.5
-    )
-    sns.despine()
-    axs[0].legend()
-    axs[0].set_ylabel("")
-    axs[0].set_title("Dice - Shifted Referential")
-
-    # plot in NATIVE referential
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Axon Native",
-        ax=axs[1], color='fuchsia', label='axon', marker='.'
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Myelin Native",
-        ax=axs[1], color='mediumvioletred', label="myelin", marker='.'
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Axon Interpolation",
-        ax=axs[1], color='fuchsia', label="axon gt interpolation", 
-        linestyle='--', alpha=0.5
-    )
-    _ = sns.lineplot(
-        data=df, x="Resize Factor", y="Dice Myelin Interpolation",
-        ax=axs[1], color='mediumvioletred', label="myelin gt interpolation", 
-        linestyle='--', alpha=0.5
-    )
-    sns.despine()
-    axs[1].legend()
-    axs[1].set_ylabel("")
-    axs[1].set_title("Dice - Native Referential")
-
-    plt.style.use('dark_background')
-    plt.savefig(results_dir / 'evaluation.png', dpi=200)
 
 
     #=============#
@@ -228,6 +158,10 @@ def main(impath, modelpath, plot_only):
             evaluation = evaluate(model_preds_path, impath)
         print(f'Plotting results for model {model}.')
         plot_and_write_results(model_preds_path)
+
+    if len(models) > 1:
+        print('Plotting model comparison.')
+        plot_model_comparison(preds_dir)
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
