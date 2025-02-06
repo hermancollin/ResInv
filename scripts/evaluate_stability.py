@@ -114,8 +114,15 @@ def apply_model(model, impath):
         path_model=model,
         gpu_id=device,
     )
-    print(f'Model {model.stem} applied to all images in expansion.')
-
+    print(f'Model {Path(model).stem} applied to all images in expansion.')
+    # move all predictions to the right directory
+    preds_dir = expansion_dir / 'preds' / Path(model).stem
+    preds_dir.mkdir(parents=True, exist_ok=True)
+    for pred_path in (expansion_dir / "imgs").glob(f'*_seg-*.png'):
+        pred_path.replace(preds_dir / pred_path.name)
+    # delete all _seg-axonmyelin.png imgs (not needed)
+    for pred in preds_dir.glob('*_seg-axonmyelin.png'):
+        pred.unlink()
 
     #============#
     # evaluation #
