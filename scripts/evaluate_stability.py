@@ -7,7 +7,7 @@ prediction) and in the resized referential (resized ground truth VS prediction).
 Author: Armand Collin
 '''
 
-from preprocess_image import get_sizes_from_directory
+from preprocess_image import get_sizes_from_directory, expand_image
 
 from pathlib import Path
 import argparse
@@ -16,6 +16,7 @@ import pandas as pd
 import torch
 from monai.metrics import DiceMetric
 from AxonDeepSeg.ads_utils import imread
+from AxonDeepSeg.segment import segment_images
 from skimage.transform import resize
 import matplotlib.pyplot as plt
 import matplotlib
@@ -95,11 +96,26 @@ def plot_and_write_results(results_dir):
     plt.style.use('dark_background')
     plt.savefig(results_dir / 'evaluation.png', dpi=200)
 
+
     #=============#
     # apply model #
     #=============#
-def apply_model(model, image):
-    ...
+def apply_model(model, impath):
+    # verify if image is already expanded
+    expansion_dir = Path(impath).parent / f'{Path(impath).stem}_expansion'
+    if not expansion_dir.exists():
+        expand_image(impath=impath, num_samples=20)
+    
+    im_paths = list((expansion_dir / 'imgs').glob('*.png'))
+    device = 0 if torch.cuda.is_available() else -1
+    
+    segment_images(
+        path_images=im_paths,
+        path_model=model,
+        gpu_id=device,
+    )
+    print(f'Model {model.stem} applied to all images in expansion.')
+
 
     #============#
     # evaluation #
@@ -187,7 +203,6 @@ def evaluate(preds_path, img_path):
 
 def main(impath, model, plot_only):
     if model:
-        # apply the model
         apply_model(model, impath)
 
     # predictions are in _expansion/preds/

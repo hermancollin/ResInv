@@ -28,9 +28,10 @@ def get_sizes(image, lower, upper, N):
         factor_increasing = 1 + (i+1) * (upper - 1) / (N//2)
         sizes.append((int(image.shape[0] * factor_decreasing), int(image.shape[1] * factor_decreasing)))
         sizes.append((int(image.shape[0] * factor_increasing), int(image.shape[1] * factor_increasing)))
+    sizes.append(image.shape)
     return sorted(sizes)
 
-def expand_image(impath, num_samples, lower, upper):
+def expand_image(impath, num_samples, lower=0.25, upper=4.0):
     '''output file structure is as follows:
         IMAGE.png
         IMAGE_seg-axon-manual.png
