@@ -11,6 +11,7 @@ import argparse
 import numpy as np
 from AxonDeepSeg.ads_utils import imread, imwrite
 from skimage.transform import resize
+from tqdm import tqdm
 
 def get_sizes_from_directory(dir):
     '''we assume that dir contains the resized images (_expansion/imgs/)'''
@@ -56,7 +57,7 @@ def expand_image(impath, num_samples, lower=0.25, upper=8.0):
     myelin_path = impath.replace(".png", "_seg-myelin-manual.png")
     axon_gt = imread(axon_path)
     myelin_gt = imread(myelin_path)
-    sizes = get_sizes(img, lower, upper, num_samples)
+    sizes = get_sizes(img, float(lower), float(upper), num_samples)
 
     print(f'Source shape: {img.shape}')
     print(f'The image will be resized to the following target shapes: {sizes}')
@@ -68,7 +69,7 @@ def expand_image(impath, num_samples, lower=0.25, upper=8.0):
     imgs_output_dir.mkdir(exist_ok=True)
     gts_output_dir.mkdir(exist_ok=True)
 
-    for size in sizes:
+    for size in tqdm(sizes):
         new_image = resize(img, size, preserve_range=True)
         new_axon_gt = resize(axon_gt, size, order=0, preserve_range=True, anti_aliasing=False)
         new_myelin_gt = resize(myelin_gt, size, order=0, preserve_range=True, anti_aliasing=False)
